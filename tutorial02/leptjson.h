@@ -4,7 +4,9 @@
 typedef enum { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRING, LEPT_ARRAY, LEPT_OBJECT } lept_type;
 
 typedef struct {
+    //增加了json中解析的数字，取名为n太草率了吧
     double n;
+    //json中解析的数字文本
     lept_type type;
 }lept_value;
 
@@ -20,6 +22,7 @@ int lept_parse(lept_value* v, const char* json);
 
 lept_type lept_get_type(const lept_value* v);
 
+//获取数字 
 double lept_get_number(const lept_value* v);
 
 #endif /* LEPTJSON_H__ */

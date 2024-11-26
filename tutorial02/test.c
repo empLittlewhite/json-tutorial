@@ -50,7 +50,18 @@ static void test_parse_false() {
         EXPECT_EQ_DOUBLE(expect, lept_get_number(&v));\
     } while(0)
 
+// 这是定义的测试数据
+// 加入 维基百科双精度浮点数 的一些边界值至单元测试，如 min subnormal positive double、max double 等。
+
+
 static void test_parse_number() {
+    // 加入一些边界值
+    TEST_NUMBER(4.9406564584124654e-324, "4.9406564584124654e-324"); // 最小的正次正规数
+    TEST_NUMBER(2.2250738585072014e-308, "2.2250738585072014e-308"); // 最小的正正规数
+    TEST_NUMBER(1.7976931348623157e+308, "1.7976931348623157e+308"); // 最大的正正规数
+    // 
+    TEST_NUMBER(0.0, "-0.0");
+    TEST_NUMBER(0.0, "0.0");
     TEST_NUMBER(0.0, "0");
     TEST_NUMBER(0.0, "-0");
     TEST_NUMBER(0.0, "-0.0");
@@ -85,10 +96,12 @@ static void test_parse_expect_value() {
     TEST_ERROR(LEPT_PARSE_EXPECT_VALUE, " ");
 }
 
+// 这是一些不合法的测试数据
 static void test_parse_invalid_value() {
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "nul");
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "?");
 
+// #if 0 #endif 是注解，#if 0 与 #endif 之间的代码编译时会被忽略。 改成1，就恢复编译
 #if 0
     /* invalid number */
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "+0");
@@ -113,11 +126,9 @@ static void test_parse_root_not_singular() {
 #endif
 }
 
+// 返回 LEPT_PARSE_NUMBER_TOO_BIG 错误码。
 static void test_parse_number_too_big() {
-#if 0
-    TEST_ERROR(LEPT_PARSE_NUMBER_TOO_BIG, "1e309");
-    TEST_ERROR(LEPT_PARSE_NUMBER_TOO_BIG, "-1e309");
-#endif
+
 }
 
 static void test_parse() {
