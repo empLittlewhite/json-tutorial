@@ -5,6 +5,8 @@
 
 typedef enum { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRING, LEPT_ARRAY, LEPT_OBJECT } lept_type;
 
+
+//访问的话直接用v->u.n就可以了,cpp11可以写成v->n
 typedef struct {
     union {
         struct { char* s; size_t len; }s;  /* string: null-terminated string, string length */

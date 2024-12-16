@@ -12,13 +12,17 @@
 #define EXPECT(c, ch)       do { assert(*c->json == (ch)); c->json++; } while(0)
 #define ISDIGIT(ch)         ((ch) >= '0' && (ch) <= '9')
 #define ISDIGIT1TO9(ch)     ((ch) >= '1' && (ch) <= '9')
+//宏定义的函数：将ch字符压入缓存区c中，然后将c->json指针向后移动一位（json是parse之后的结果）
 #define PUTC(c, ch)         do { *(char*)lept_context_push(c, sizeof(char)) = (ch); } while(0)
 
+//解析字符串的结果存放在缓存区（存放多条解析结果）中，缓存区的大小是动态变化且先进后出（栈）
 typedef struct {
     const char* json;
     char* stack;
     size_t size, top;
 }lept_context;
+
+
 
 static void* lept_context_push(lept_context* c, size_t size) {
     void* ret;
@@ -27,7 +31,7 @@ static void* lept_context_push(lept_context* c, size_t size) {
         if (c->size == 0)
             c->size = LEPT_PARSE_STACK_INIT_SIZE;
         while (c->top + size >= c->size)
-            c->size += c->size >> 1;  /* c->size * 1.5 */
+            c->size += c->size >> 1;  /* 动态扩容c->size * 1.5 */
         c->stack = (char*)realloc(c->stack, c->size);
     }
     ret = c->stack + c->top;
@@ -58,6 +62,7 @@ static int lept_parse_literal(lept_context* c, lept_value* v, const char* litera
     return LEPT_PARSE_OK;
 }
 
+//这里都是对lept_value的扫描分析
 static int lept_parse_number(lept_context* c, lept_value* v) {
     const char* p = c->json;
     if (*p == '-') p++;
@@ -89,11 +94,13 @@ static int lept_parse_number(lept_context* c, lept_value* v) {
 static int lept_parse_string(lept_context* c, lept_value* v) {
     size_t head = c->top, len;
     const char* p;
+    //如果 c 不是双引号，通常会触发错误处理机制。
     EXPECT(c, '\"');
     p = c->json;
     for (;;) {
         char ch = *p++;
         switch (ch) {
+            //表示字符串结束，将解析结果存储在 v 中，并返回 LEPT_PARSE_OK。
             case '\"':
                 len = c->top - head;
                 lept_set_string(v, (const char*)lept_context_pop(c, len), len);
@@ -140,6 +147,8 @@ int lept_parse(lept_value* v, const char* json) {
     return ret;
 }
 
+
+//这里都是对lept_value的操作（获取、修改、初始化value中的各种类型）
 void lept_free(lept_value* v) {
     assert(v != NULL);
     if (v->type == LEPT_STRING)
@@ -153,12 +162,12 @@ lept_type lept_get_type(const lept_value* v) {
 }
 
 int lept_get_boolean(const lept_value* v) {
-    /* \TODO */
-    return 0;
+    assert(v != NULL );
+    return v->type == LEPT_TRUE;
 }
 
 void lept_set_boolean(lept_value* v, int b) {
-    /* \TODO */
+    v->type = b ? LEPT_TRUE : LEPT_FALSE;
 }
 
 double lept_get_number(const lept_value* v) {
@@ -167,7 +176,8 @@ double lept_get_number(const lept_value* v) {
 }
 
 void lept_set_number(lept_value* v, double n) {
-    /* \TODO */
+    v->type = LEPT_NUMBER;
+    v->u.n = n;
 }
 
 const char* lept_get_string(const lept_value* v) {
@@ -180,9 +190,12 @@ size_t lept_get_string_length(const lept_value* v) {
     return v->u.s.len;
 }
 
+//设置lept_value中的字符串,相当于初始化（涉及内存管理）
 void lept_set_string(lept_value* v, const char* s, size_t len) {
+    //断言：对一个表达式进行求值，如果表达式的值为假（即等于 0），则会终止程序的执行，并输出错误信息；
     assert(v != NULL && (s != NULL || len == 0));
     lept_free(v);
+    //len+1是为了存储字符串的结尾符'\0'
     v->u.s.s = (char*)malloc(len + 1);
     memcpy(v->u.s.s, s, len);
     v->u.s.s[len] = '\0';
